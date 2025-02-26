@@ -19,8 +19,8 @@ blogRouter.use("/*", async(c,next)=>{
     c.status(411)
     return c.text("no token found for authorization")
   }
-  const token=header.split(" ")[2];
-  // console.log(token)
+  const token=header.split(" ")[1];
+  console.log(token)
   const decoded=await Jwt.verify(token,c.env.JWT_SECRET);
   // console.log(decoded)
   if(typeof(decoded.id)!="string" ||!(decoded) || !("id" in decoded) ){
@@ -31,6 +31,23 @@ blogRouter.use("/*", async(c,next)=>{
   await next();
 
   })
+blogRouter.get("/manyblogs", async(c)=>{
+  console.log("hi inside manyblog")
+  const prisma= new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL
+  }).$extends(withAccelerate())
+  try{
+    const allblogs=await  prisma.post.findMany()
+  console.log(allblogs)
+  return c.json({
+    blogs: allblogs
+  })
+  }
+  catch(e){
+    c.status(411)
+    return c.text("problem in awaiting")
+  }
+})
 
 blogRouter.post("/",async (c)=>{
     const prisma= new PrismaClient({
@@ -72,7 +89,18 @@ blogRouter.post("/",async (c)=>{
     const prisma= new PrismaClient({
       datasourceUrl: c.env.DATABASE_URL
     }).$extends(withAccelerate())
-    const blogs=await prisma.post.findMany( );
+    const blogs=await prisma.post.findMany({
+      select:{
+        title: true,
+        description: true,
+        id: true,
+        author:{
+          select:{
+            name: true,
+          }
+        }
+      }
+    });
     console.log(blogs)
     return  c.json({
       blogs: blogs
@@ -85,6 +113,16 @@ blogRouter.post("/",async (c)=>{
     const blog= await prisma.post.findUnique({
       where:{
         id: String(c.req.param("id"))
+      },
+      select:{
+        title: true,
+        description: true,
+        id: true,
+        author:{
+          select:{
+            name: true
+          }
+        }
       }
         })
       console.log("hi there")
@@ -94,10 +132,7 @@ blogRouter.post("/",async (c)=>{
     }
     c.status(200);
     return c.json({
-      id: blog.id,
-      title: blog.title,
-      descxription: blog.description,
-      owner: blog.authorid
+     blog: blog
     })
   })
 
