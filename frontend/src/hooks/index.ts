@@ -24,6 +24,7 @@ export const useBlogs= ()=>{
             }
         })
         .then((response)=>{
+            console.log("inside the bulk hook")
             setLoading(false);
             setBlogs(response.data.blogs)
         })

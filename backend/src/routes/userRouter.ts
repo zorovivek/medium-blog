@@ -42,13 +42,14 @@ userRouter.post("/signup",async (c)=>{
     })
 } )
 userRouter.post("/signin",async(c)=>{
+    console.log("inside signin")
     const prisma= new PrismaClient({
         datasourceUrl:c.env.DATABASE_URL
     }).$extends(withAccelerate())
     const body= await c.req.json()
     const user= await prisma.user.findUnique({
         where:{
-            email: body.email,
+            email: body.username,
             password: body.password
         }
     });
